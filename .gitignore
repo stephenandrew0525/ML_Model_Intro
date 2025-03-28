@@ -1,0 +1,67 @@
+# Python bytecode
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.pdb
+
+# Virtual environment
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Flask app instance
+instance/
+
+# .env files
+.env
+.env.*
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Models
+*.joblib
+*.h5
+*.pth
+*.pkl
+
+# Logs
+*.log
+
+# SQLite database
+*.db
+*.sqlite3
+
+# Temporary files
+*.bak
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# Flask specific config files
+config.py
+
+# Pytest cache
+.cache/
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+
+# Test output
+nosetests.xml
+coverage.xml
+*.cover
+*.hypothesis/

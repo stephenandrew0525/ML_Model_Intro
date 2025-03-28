@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Message Detector</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f5;
+            --text-color: #2c3e50;
+            --card-bg: #ffffff;
+            --card-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            --border-color: #ddd;
+            --hover-color: #f5f5f5;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --card-bg: #2d2d2d;
+            --card-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            --border-color: #404040;
+            --hover-color: #3d3d3d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: var(--text-color);
+            margin: 0;
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+        .theme-toggle:hover {
+            background-color: var(--hover-color);
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            min-height: 150px;
+            resize: vertical;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+        .model-select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+            background-color: var(--card-bg);
+        }
+        .spam {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .not-spam {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .confidence {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #666;
+        }
+        .model-info {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #666;
+            font-style: italic;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .model-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        .model-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-color);
+            display: block;
+        }
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .model-card h3 {
+            color: var(--text-color);
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .model-card ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .model-card li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        .model-card li:before {
+            content: "•";
+            color: #3498db;
+            position: absolute;
+            left: 0;
+        }
+        .strength {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        .weakness {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Spam Message Detector</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+        </div>
+        <div class="input-group">
+            <select id="modelSelect" class="model-select">
+                <option value="naive_bayes">Naive Bayes</option>
+                <option value="random_forest">Random Forest</option>
+                <option value="logistic_regression">Logistic Regression</option>
+                <option value="bert">BERT</option>
+            </select>
+            <textarea id="message" placeholder="Enter the message to check for spam..."></textarea>
+        </div>
+        <button onclick="checkSpam()">Check for Spam</button>
+        <div id="loading" class="loading">Analyzing...</div>
+        <div id="result"></div>
+
+        <div class="model-cards">
+            <a href="/model/naive_bayes" class="model-card">
+                <h3>Naive Bayes</h3>
+                <ul>
+                    <li><span class="strength">Strengths:</span> Fast training and prediction, works well with high-dimensional data</li>
+                    <li><span class="weakness">Limitations:</span> Assumes features are independent, may miss complex patterns</li>
+                    <li><span class="strength">Best for:</span> Quick baseline predictions, real-time applications</li>
+                    <li><span class="weakness">Challenges:</span> Can be sensitive to feature correlations</li>
+                    <li>Algorithm: Probabilistic classifier based on Bayes' theorem</li>
+                </ul>
+            </a>
+
+            <a href="/model/random_forest" class="model-card">
+                <h3>Random Forest</h3>
+                <ul>
+                    <li><span class="strength">Strengths:</span> High accuracy, handles non-linear relationships</li>
+                    <li><span class="weakness">Limitations:</span> More complex, slower training time</li>
+                    <li><span class="strength">Best for:</span> Complex patterns, feature importance analysis</li>
+                    <li><span class="weakness">Challenges:</span> Can overfit on small datasets</li>
+                    <li>Algorithm: Ensemble of decision trees with random feature selection</li>
+                </ul>
+            </a>
+
+            <a href="/model/logistic_regression" class="model-card">
+                <h3>Logistic Regression</h3>
+                <ul>
+                    <li><span class="strength">Strengths:</span> Interpretable, works well with linearly separable data</li>
+                    <li><span class="weakness">Limitations:</span> May struggle with complex patterns</li>
+                    <li><span class="strength">Best for:</span> Binary classification, when interpretability is important</li>
+                    <li><span class="weakness">Challenges:</span> Requires feature scaling, sensitive to outliers</li>
+                    <li>Algorithm: Linear model with sigmoid activation function</li>
+                </ul>
+            </a>
+
+            <a href="/model/bert" class="model-card">
+                <h3>BERT</h3>
+                <ul>
+                    <li><span class="strength">Strengths:</span> State-of-the-art performance, understands context</li>
+                    <li><span class="weakness">Limitations:</span> Requires large computational resources</li>
+                    <li><span class="strength">Best for:</span> Complex language understanding, context-aware predictions</li>
+                    <li><span class="weakness">Challenges:</span> Needs fine-tuning for specific tasks</li>
+                    <li>Algorithm: Transformer-based deep learning model</li>
+                </ul>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+        }
+
+        async function checkSpam() {
+            const message = document.getElementById('message').value;
+            const modelType = document.getElementById('modelSelect').value;
+            
+            if (!message.trim()) {
+                alert('Please enter a message to check');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            loading.style.display = 'block';
+            result.style.display = 'none';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        text: message,
+                        model_type: modelType
+                    })
+                });
+
+                const data = await response.json();
+                
+                result.style.display = 'block';
+                result.className = data.prediction === 'Spam' ? 'spam' : 'not-spam';
+                result.innerHTML = `
+                    <h3>Result: ${data.prediction}</h3>
+                    <div class="confidence">Confidence: ${(data.confidence * 100).toFixed(2)}%</div>
+                    <div class="model-info">Model used: ${data.model_used.replace('_', ' ').toUpperCase()}</div>
+                `;
+            } catch (error) {
+                result.style.display = 'block';
+                result.className = 'spam';
+                result.innerHTML = 'Error: Could not process the request';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 
